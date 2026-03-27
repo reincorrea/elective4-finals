@@ -1,0 +1,49 @@
+name: CI/CD with Testing
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # STEP 1: TEST
+  test_site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm ci
+      - name: Run HTML Validation Test
+        run: npm test > error-logs.txt 2>&1
+
+      - name: Upload Error Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PR-Error-Logs
+          path: error-logs.txt
+          retention-days: 7
+
+  # STEP 2: DEPLOY (Only if tests pass)
+  deploy_site:
+    needs: test_site
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      - name: Upload Website Files
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.' # Uploads your index.html directly from the main folder
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
