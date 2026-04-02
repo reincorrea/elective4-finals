@@ -33,3 +33,33 @@ test('Standard: Logic must be inside <script> tags', () => {
     const hasIllegalJS = /const\s|let\s|var\s|function\s|=>/.test(bodyOnly);
     expect(hasIllegalJS).toBe(false);
 });
+
+const tagsToCheck = [
+    'script',
+    'html',
+    'style',
+    'head',
+    'title',
+    'body',
+    'div',
+    'button',
+    'section',
+    'p',
+    'h1',
+    'h2',
+    'h3'
+];
+
+describe('HTML Tag Closure Validation', () => {
+    tagsToCheck.forEach(tag => {
+        test(`HTML Syntax: <${tag}> tags must be properly closed`, () => {
+            const openTagRegex = new RegExp(`<${tag}\\b[^>]*>`, 'gi');
+            const closeTagRegex = new RegExp(`</${tag}>`, 'gi');
+
+            const openTags = (htmlContent.match(openTagRegex) || []).length;
+            const closeTags = (htmlContent.match(closeTagRegex) || []).length;
+
+            expect(openTags).toBe(closeTags);
+        });
+    });
+});
